@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using G1Maestro.Entities;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
@@ -15,16 +16,19 @@ namespace G1Maestro.Dialogs
             return Task.CompletedTask;
         }
 
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        private Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            var activity = await result as Activity;
-
-            // calculate something for us to return
-            int length = (activity.Text ?? string.Empty).Length;
-
             // return our reply to the user
-            await context.PostAsync($"You sent {activity.Text} which was {length} characters");
+            context.PostAsync("Hi! Welcome to G1Maestro");
+            context.Call<UserProfile>(new EnsureProfileDialog(), SaveUserProfile);
+            return Task.CompletedTask;
+        }
 
+        private async Task SaveUserProfile(IDialogContext context, IAwaitable<UserProfile> result)
+        {
+            UserProfile profile = await result;
+            context.UserData.SetValue("profile", profile);
+            await context.PostAsync($"Hello {profile.Name}, I love {profile.CompanyName}");
             context.Wait(MessageReceivedAsync);
         }
     }
